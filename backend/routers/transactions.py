@@ -1,6 +1,6 @@
 """Transaction API endpoints."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from services.transaction_service import parse_expenses
 from services.validator_service import validate_transactions
 from services.filter_service import apply_temporal_filters
@@ -10,14 +10,18 @@ router = APIRouter(tags=["Transactions"])
 
 
 @router.post("/transactions:parse")
-async def parse_transactions(payload: dict):
+async def parse_transactions(request: Request):
     """
     Transaction Builder — Parse expenses into enriched transactions.
 
-    Input: { expenses: [{date, amount}, ...] }
+    Input: [{date, amount}, ...] OR { expenses: [{date, amount}, ...] }
     Output: [{date, amount, ceiling, remanent}, ...]
     """
-    expenses_raw = payload.get("expenses", [])
+    body = await request.json()
+    if isinstance(body, list):
+        expenses_raw = body
+    else:
+        expenses_raw = body.get("expenses", [])
     transactions = parse_expenses(expenses_raw)
     return transactions
 
@@ -48,6 +52,10 @@ async def filter_transactions(payload: dict):
     p = payload.get("p", [])
     k = payload.get("k", [])
     transactions = payload.get("transactions", [])
+
+    # Auto-parse raw expenses if ceiling/remanent not present
+    if transactions and "ceiling" not in transactions[0]:
+        transactions = parse_expenses(transactions)
 
     # Validate transactions first — separate valid from invalid
     valid_txns = []
