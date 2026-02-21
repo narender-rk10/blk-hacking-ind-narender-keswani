@@ -1,6 +1,8 @@
 """Transaction API endpoints."""
 
-from fastapi import APIRouter, Request
+from typing import List, Optional
+from fastapi import APIRouter
+from pydantic import BaseModel
 from services.transaction_service import parse_expenses
 from services.validator_service import validate_transactions
 from services.filter_service import apply_temporal_filters
@@ -9,19 +11,24 @@ from datetime import datetime
 router = APIRouter(tags=["Transactions"])
 
 
+class Expense(BaseModel):
+    date: str
+    amount: float
+
+
+class ParseRequest(BaseModel):
+    expenses: List[Expense]
+
+
 @router.post("/transactions:parse")
-async def parse_transactions(request: Request):
+async def parse_transactions(payload: ParseRequest):
     """
     Transaction Builder — Parse expenses into enriched transactions.
 
-    Input: [{date, amount}, ...] OR { expenses: [{date, amount}, ...] }
+    Input: { expenses: [{date, amount}, ...] }
     Output: [{date, amount, ceiling, remanent}, ...]
     """
-    body = await request.json()
-    if isinstance(body, list):
-        expenses_raw = body
-    else:
-        expenses_raw = body.get("expenses", [])
+    expenses_raw = [e.model_dump() for e in payload.expenses]
     transactions = parse_expenses(expenses_raw)
     return transactions
 
