@@ -1,0 +1,37 @@
+services:
+  backend:
+    build: ./backend
+    container_name: blk-hacking-ind-narender-backend
+    ports:
+      - "5477:5477"
+    environment:
+      - WORKERS=4
+      - ENV=production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5477/health')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - blk-network
+
+  frontend:
+    build: ./frontend
+    container_name: blk-hacking-ind-narender-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - blk-network
+
+networks:
+  blk-network:
+    driver: bridge

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+*.egg
+
+# Node
+node_modules/
+dist/
+
+# Environment
+.env
+.env.local
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Synthetic test data (369MB+)
+test/data/
+
+# Docker
+*.log
+.claude/
